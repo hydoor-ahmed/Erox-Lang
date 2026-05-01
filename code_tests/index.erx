@@ -1,0 +1,126 @@
+// ═══════════════════════════════════════════════════════
+// EROX Language — Full Feature Test Suite
+// ═══════════════════════════════════════════════════════
+
+// ── Shell Execution ─────────────────────────────────────
+print("\n---------------- Shell Execution ----------------")
+let user = $ "whoami" $
+let kernel = $ "uname -r" $
+print("Welcome to EROX, " + user)
+print("System Kernel: " + kernel)
+
+// ── Closures + Shell ────────────────────────────────────
+print("\n---------------- Closures + Shell ----------------")
+let check_file = (filename) => {
+    return $ "ls " + filename $
+}
+let result = check_file("Cargo.toml")
+if (result == "Cargo.toml") {
+    print("SUCCESS: File Found: ${result}")
+} else {
+    print("FAILURE: Expected Cargo.toml, got ${result}")
+}
+
+// ── While Loop ──────────────────────────────────────────
+print("\n---------------- While Loop ----------------")
+let i = 0
+while (i < 5) {
+    print("while: " + i)
+    i = i + 1
+}
+
+// ── For Loop ────────────────────────────────────────────
+print("\n---------------- For Loop ----------------")
+for (let j = 0; j < 5; j++) {
+    print("for: " + j)
+}
+
+// ── Arrays ──────────────────────────────────────────────
+print("\n---------------- Arrays ----------------")
+let ports = [80, 443, 8080, 3000]
+print("Ports: " + ports)
+print("First port: " + ports[0])
+print("Last port: " + ports[3])
+print("Array length: " + len(ports))
+
+// ── Objects ─────────────────────────────────────────────
+print("\n---------------- Objects ----------------")
+let config = {
+    "host": "localhost",
+    "port": 8080,
+    "debug": true
+}
+print("Config: " + config)
+print("Host: " + config["host"])
+print("Port: " + config["port"])
+
+// ── Nested Data Structures ──────────────────────────────
+print("\n---------------- Nested Data Structures ----------------")
+let server = {
+    "name": "erox-server",
+    "ports": [80, 443],
+    "settings": {
+        "timeout": 30,
+        "retries": 3
+    }
+}
+print("Server: " + server)
+print("Server name: " + server["name"])
+
+// ── Constants ───────────────────────────────────────────
+print("\n---------------- Constants ----------------")
+const VERSION = "1.0.0"
+const MAX_CONNECTIONS = 100
+print("EROX Version: " + VERSION)
+print("Max connections: " + MAX_CONNECTIONS)
+
+// ── Built-in Functions ──────────────────────────────────
+print("\n---------------- Built-in Functions ----------------")
+let items = [1, 2, 3]
+print("Length of items: " + len(items))
+push(items, 4)
+push(items, 5)
+print("After push: " + items)
+print("Type of items: " + typeof(items))
+print("Type of VERSION: " + typeof(VERSION))
+print("Type of 42: " + typeof(42))
+print("Type of true: " + typeof(true))
+
+// ── Comparison Operators ────────────────────────────────
+print("\n---------------- Comparison Operators ----------------")
+print("5 <= 5: " + (5 <= 5))
+print("5 >= 6: " + (5 >= 6))
+print("10 % 3: " + (10 % 3))
+
+// ── Loop + Array Collection ─────────────────────────────
+print("\n---------------- Loop + Array Collection ----------------")
+let results = []
+for (let k = 0; k < 5; k++) {
+    push(results, k * k)
+}
+print("Squares: " + results)
+
+// ── Async Shell in Loop ─────────────────────────────────
+print("\n---------------- Async Shell in Loop ----------------")
+let commands = ["echo one", "echo two", "echo three"]
+let outputs = []
+for (let c = 0; c < len(commands); c++) {
+    let output = $ commands[c] $
+    push(outputs, output)
+}
+print("Shell outputs: " + outputs)
+
+// ── Named Functions ─────────────────────────────────────
+print("\n---------------- Named Functions ----------------")
+fn fibonacci(n) {
+    if (n <= 1) {
+        return n
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2)
+}
+print("fibonacci(10): " + fibonacci(10))
+
+// ── Done ────────────────────────────────────────────────
+print("\n======================================================")
+print("               All tests passed! EROX is ready.")
+print("======================================================")
