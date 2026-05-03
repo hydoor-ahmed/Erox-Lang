@@ -1,0 +1,47 @@
+// ── EROX Standard Library Test Suite ─────────────────────────
+print("======== Standard Library Tests ========")
+
+// ── OS Module ───────────────────────────────────────────
+print("\n--- OS Module ---")
+import os
+print("os.name(): " + os.name())
+print("os.cpu(): " + os.cpu())
+print("os.env('HOME'): " + os.env("HOME"))
+
+// ── JSON Module ─────────────────────────────────────────
+print("\n--- JSON Module ---")
+import json
+let parsed = json.to_obj("{\"name\": \"EROX\", \"version\": 1}")
+print("parsed['name']: " + parsed["name"])
+print("parsed['version']: " + parsed["version"])
+
+let obj = {"key": "value", "num": 42}
+let txt = json.to_txt(obj)
+print("json.to_txt: " + txt)
+
+// ── Random Module ───────────────────────────────────────
+print("\n--- Random Module ---")
+import random
+print("random.range(1, 100): " + random.range(1, 100))
+print("random.bool(): " + random.bool())
+print("random.string(12): " + random.string(12))
+
+let items = ["apple", "banana", "cherry"]
+print("random.pick: " + random.pick(items))
+
+// ── Crypto Module ───────────────────────────────────────
+print("\n--- Crypto Module ---")
+import crypto
+print("md5('hello'): " + crypto.md5("hello"))
+print("sha256('hello'): " + crypto.sha256("hello"))
+print("base64_enc('hello world'): " + crypto.base64_enc("hello world"))
+print("base64_dec('aGVsbG8gd29ybGQ='): " + crypto.base64_dec("aGVsbG8gd29ybGQ="))
+
+// ── FS Module ───────────────────────────────────────────
+print("\n--- FS Module ---")
+import fs
+print("fs.exists('Cargo.toml'): " + fs.exists("Cargo.toml"))
+let info = fs.info("Cargo.toml")
+print("fs.info('Cargo.toml'): " + info)
+
+print("\n======== All Standard Library Tests Complete ========")

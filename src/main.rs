@@ -8,8 +8,9 @@ use std::env;
 use std::fs;
 use std::process;
 
-/// EROX Language CLI — Production Entry Point
-fn main() {
+/// EROX Language CLI — Production Entry Point (Async Runtime)
+#[tokio::main]
+async fn main() {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
@@ -23,14 +24,14 @@ fn main() {
         process::exit(1);
     });
 
-    if let Err(e) = execute(&source, filename) {
+    if let Err(e) = execute(&source, filename).await {
         eprintln!("{}", e);
         process::exit(1);
     }
 }
 
-/// Pipeline: Source -> Lexer -> Parser -> Compiler -> VM
-fn execute(source: &str, filename: &str) -> Result<(), String> {
+/// Pipeline: Source -> Lexer -> Parser -> Compiler -> VM (Async)
+async fn execute(source: &str, filename: &str) -> Result<(), String> {
     let lexer = Lexer::new(source.to_string());
     let mut parser = Parser::new(lexer);
     let program = parser.parse_program();
@@ -63,6 +64,9 @@ fn execute(source: &str, filename: &str) -> Result<(), String> {
     compiler.compile(program);
 
     let mut vm = VM::new();
+    vm.source = source.to_string();
+    vm.filename = filename.to_string();
+
     // Register built-in functions
     vm.globals.insert(0, ErroObject::NativeFunction(NativeFnWrapper {
         name: "print",
@@ -81,7 +85,7 @@ fn execute(source: &str, filename: &str) -> Result<(), String> {
         func: native_typeof,
     }));
     
-    vm.run(compiler.instructions, compiler.constants);
+    vm.run(compiler.instructions, compiler.constants).await;
 
     Ok(())
 }

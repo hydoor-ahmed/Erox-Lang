@@ -1,0 +1,32 @@
+// ── EROX Method Syntax Test Suite ────────────────────────────
+print("======== Method Dispatch Tests ========")
+
+// ── String Methods ──────────────────────────────────────
+print("\n--- String Methods ---")
+let s = "hello world"
+print("s.len(): " + s.len())
+print("s.upper(): " + s.upper())
+print("s.lower(): " + s.lower())
+print("s.split(' '): " + s.split(" "))
+print("s.type(): " + s.type())
+
+// ── Array Methods ───────────────────────────────────────
+print("\n--- Array Methods ---")
+let arr = [1, 2, 3]
+arr.push(4)
+print("arr after push(4): " + arr)
+print("arr.len(): " + arr.len())
+print("arr.join(', '): " + arr.join(", "))
+print("arr.type(): " + arr.type())
+
+// ── Number Methods ──────────────────────────────────────
+print("\n--- Number Methods ---")
+let n = 42
+print("n.type(): " + n.type())
+
+// ── Boolean Methods ─────────────────────────────────────
+print("\n--- Boolean Methods ---")
+print("true.type(): " + true.type())
+print("false.type(): " + false.type())
+
+print("\n======== All Method Tests Complete ========")

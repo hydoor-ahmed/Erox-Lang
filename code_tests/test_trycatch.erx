@@ -1,0 +1,15 @@
+// ── EROX Try/Catch Test Suite ────────────────────────────────
+print("======== Try/Catch Tests ========")
+
+// ── Basic try/catch with no error ───────────────────────
+print("\n--- Try with no error ---")
+try {
+    let x = 10
+    print("Inside try: x = " + x)
+} catch (err) {
+    print("This should NOT run")
+}
+print("After try/catch — program continues")
+
+// ── Done ────────────────────────────────────────────────
+print("\n======== All Try/Catch Tests Complete ========")

@@ -13,6 +13,7 @@ pub enum Statement {
     If { condition: Expression, consequence: Vec<Statement>, alternative: Option<Vec<Statement>> },
     Assign { name: String, value: Expression },
     Import { path: String, item: Option<String> },
+    TryCatch { try_body: Vec<Statement>, catch_param: String, catch_body: Vec<Statement> },
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -33,6 +34,7 @@ pub enum Expression {
     Object(Vec<(String, Expression)>),
     Index { object: Box<Expression>, index: Box<Expression> },
     Member { object: Box<Expression>, field: String },
+    MethodCall { object: Box<Expression>, method: String, arguments: Vec<Expression> },
     Await(Box<Expression>),
 }
 
@@ -103,6 +105,7 @@ impl Parser {
             Token::While => self.parse_while_statement(),
             Token::For => self.parse_for_statement(),
             Token::If => self.parse_if_statement(),
+            Token::Try => self.parse_try_catch_statement(),
             Token::LBrace => {
                 let stmts = self.parse_block_statements();
                 if self.cur_token == Token::RBrace { self.next_token(); }
@@ -172,6 +175,7 @@ impl Parser {
             Token::Dollar => self.parse_shell_expression(),
             Token::True => Expression::Boolean(true),
             Token::False => Expression::Boolean(false),
+            Token::NullLiteral => Expression::Null,
             Token::Minus | Token::Bang => self.parse_prefix_expression(),
             Token::LParen => self.parse_paren_or_arrow_expression(),
             Token::LBracket => self.parse_array_literal(),
@@ -282,12 +286,19 @@ impl Parser {
         Expression::Index { object: Box::new(left), index: Box::new(index) }
     }
 
-    // ── Member Expression ───────────────────────────────────────
+    // ── Member Expression / Method Call ──────────────────────────
     fn parse_member_expression(&mut self, left: Expression) -> Expression {
         // cur_token is `.`
         self.next_token(); // move to field name
         if let Token::Identifier(field) = self.cur_token.clone() {
-            Expression::Member { object: Box::new(left), field }
+            // Check if this is a method call: obj.method(...)
+            if self.peek_token == Token::LParen {
+                self.next_token(); // consume `(`
+                let arguments = self.parse_call_arguments();
+                Expression::MethodCall { object: Box::new(left), method: field, arguments }
+            } else {
+                Expression::Member { object: Box::new(left), field }
+            }
         } else {
             self.error_at_current(&format!("Expected field name after `.`, got {:?}", self.cur_token));
             Expression::Null
@@ -607,11 +618,83 @@ impl Parser {
 
     fn parse_import_statement(&mut self) -> Option<Statement> {
         self.next_token();
-        if let Token::String(path) = self.cur_token.clone() {
-            self.next_token();
-            return Some(Statement::Import { path, item: None });
+        match self.cur_token.clone() {
+            Token::String(path) => {
+                self.next_token();
+                Some(Statement::Import { path, item: None })
+            }
+            Token::Identifier(name) => {
+                // import net — loads built-in module
+                if self.peek_token == Token::Semicolon {
+                    self.next_token();
+                }
+                self.next_token();
+                Some(Statement::Import { path: name, item: None })
+            }
+            _ => {
+                self.error_at_current("Expected string path or module name after `import`");
+                None
+            }
         }
-        None
+    }
+
+    // ── Try/Catch Statement ──────────────────────────────────────
+    fn parse_try_catch_statement(&mut self) -> Option<Statement> {
+        // cur_token is `try`
+        if !self.expect_peek(Token::LBrace) {
+            self.error_at_current("Expected `{` after `try`");
+            return None;
+        }
+        let try_body = self.parse_block_statements();
+        if self.cur_token == Token::RBrace { self.next_token(); }
+
+        // Expect `catch`
+        if self.cur_token != Token::Catch {
+            self.error_at_current("Expected `catch` after try block");
+            return None;
+        }
+
+        // Expect `(identifier)`
+        if !self.expect_peek(Token::LParen) {
+            self.error_at_current("Expected `(` after `catch`");
+            return None;
+        }
+        self.next_token(); // move to identifier
+        let catch_param = if let Token::Identifier(name) = self.cur_token.clone() {
+            name
+        } else {
+            self.error_at_current("Expected identifier in catch");
+            return None;
+        };
+        if !self.expect_peek(Token::RParen) {
+            self.error_at_current("Expected `)` after catch parameter");
+            return None;
+        }
+        if !self.expect_peek(Token::LBrace) {
+            self.error_at_current("Expected `{` for catch body");
+            return None;
+        }
+        let catch_body = self.parse_block_statements();
+        if self.cur_token == Token::RBrace { self.next_token(); }
+
+        Some(Statement::TryCatch { try_body, catch_param, catch_body })
+    }
+
+    // ── Call Arguments (shared helper) ───────────────────────────
+    fn parse_call_arguments(&mut self) -> Vec<Expression> {
+        let mut arguments = vec![];
+        if self.peek_token == Token::RParen {
+            self.next_token();
+            return arguments;
+        }
+        self.next_token();
+        arguments.push(self.parse_expression(Precedence::LOWEST));
+        while self.peek_token == Token::Comma {
+            self.next_token(); self.next_token();
+            arguments.push(self.parse_expression(Precedence::LOWEST));
+        }
+        self.expect_peek(Token::RParen);
+        arguments
     }
 
     fn parse_paren_or_arrow_expression(&mut self) -> Expression {

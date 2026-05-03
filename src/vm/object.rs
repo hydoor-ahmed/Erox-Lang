@@ -15,6 +15,8 @@ pub enum ErroObject {
     NativeFunction(NativeFnWrapper),
     Array(Rc<RefCell<Vec<ErroObject>>>),
     Object(Rc<RefCell<HashMap<String, ErroObject>>>),
+    Module(Rc<HashMap<String, ErroObject>>),
+    Future(Rc<FutureObject>),
     Null,
 }
 
@@ -47,6 +49,8 @@ impl PartialEq for ErroObject {
             (ErroObject::NativeFunction(a), ErroObject::NativeFunction(b)) => a == b,
             (ErroObject::Array(a), ErroObject::Array(b)) => Rc::ptr_eq(a, b),
             (ErroObject::Object(a), ErroObject::Object(b)) => Rc::ptr_eq(a, b),
+            (ErroObject::Module(a), ErroObject::Module(b)) => Rc::ptr_eq(a, b),
+            (ErroObject::Future(a), ErroObject::Future(b)) => Rc::ptr_eq(a, b),
             (ErroObject::Null, ErroObject::Null) => true,
             _ => false,
         }
@@ -64,6 +68,8 @@ impl fmt::Debug for ErroObject {
             ErroObject::NativeFunction(nf) => nf.fmt(f),
             ErroObject::Array(arr) => write!(f, "Array({:?})", arr.borrow()),
             ErroObject::Object(obj) => write!(f, "Object({:?})", obj.borrow()),
+            ErroObject::Module(m) => write!(f, "Module({:?})", m.keys().collect::<Vec<_>>()),
+            ErroObject::Future(fut) => write!(f, "<Future {}>", fut.function.name),
             ErroObject::Null => write!(f, "Null"),
         }
     }
@@ -75,6 +81,7 @@ pub struct CompiledFunction {
     pub instructions: Vec<Opcode>,
     pub num_locals: usize,
     pub num_upvalues: usize,
+    pub is_async: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -87,6 +94,14 @@ pub struct ClosureObject {
 pub enum Upvalue {
     Open(usize),
     Closed(ErroObject),
+}
+
+/// Represents a suspended async function call awaiting execution.
+#[derive(Debug, Clone)]
+pub struct FutureObject {
+    pub function: Rc<CompiledFunction>,
+    pub upvalues: Vec<Rc<RefCell<Upvalue>>>,
+    pub args: Vec<ErroObject>,
 }
 
 impl ErroObject {
@@ -114,6 +129,11 @@ impl ErroObject {
                     .collect();
                 format!("{{ {} }}", pairs.join(", "))
             }
+            ErroObject::Module(m) => {
+                let keys: Vec<&String> = m.keys().collect();
+                format!("<module {:?}>", keys)
+            }
+            ErroObject::Future(fut) => format!("<Future {}>", fut.function.name),
             ErroObject::Null => "null".to_string(),
         }
     }
@@ -132,6 +152,21 @@ impl ErroObject {
             ErroObject::Boolean(false) | ErroObject::Null => false,
             ErroObject::Number(n) => *n != 0.0,
             _ => true,
+        }
+    }
+
+    /// Get the EROX type name of this object
+    pub fn type_name(&self) -> &'static str {
+        match self {
+            ErroObject::Number(_) => "number",
+            ErroObject::String(_) => "string",
+            ErroObject::Boolean(_) => "boolean",
+            ErroObject::Array(_) => "array",
+            ErroObject::Object(_) => "object",
+            ErroObject::Module(_) => "module",
+            ErroObject::Future(_) => "future",
+            ErroObject::Function(_) | ErroObject::Closure(_) | ErroObject::NativeFunction(_) => "function",
+            ErroObject::Null => "null",
         }
     }
 }

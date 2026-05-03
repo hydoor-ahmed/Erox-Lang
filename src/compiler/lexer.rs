@@ -4,11 +4,12 @@
 pub enum Token {
     // Keywords
     Let, Const, Fn, If, Else, Return, Async, Await, Import, From, While, For,
+    Try, Catch,
     // Literals
     Identifier(String),
     Number(f64),
     String(String),
-    True, False,
+    True, False, NullLiteral,
     // Operators
     Assign, Plus, Minus, Star, Slash, Modulo,
     Bang, Equal, NotEqual, GT, LT, GTE, LTE, Arrow,
@@ -30,6 +31,7 @@ impl Token {
             "const" => Token::Const,
             "true" => Token::True,
             "false" => Token::False,
+            "null" => Token::NullLiteral,
             "if" => Token::If,
             "else" => Token::Else,
             "return" => Token::Return,
@@ -39,6 +41,8 @@ impl Token {
             "for" => Token::For,
             "import" => Token::Import,
             "from" => Token::From,
+            "try" => Token::Try,
+            "catch" => Token::Catch,
             _ => Token::Identifier(ident.to_string()),
         }
     }

@@ -1,0 +1,16 @@
+import json
+
+print("\n---- Async/Await Testing ----")
+async fn get_data() {
+  print("Fetching...")
+
+  let res = await $ "curl -s https://api.github.com" $
+  let obj = json.to_ob(res)
+
+  print("Current User URL: ${obj.current_user_url}")
+  print("Emojis URL: ${obj.emojis_url}")
+  print("Followers URL: ${obj.followers_url}")
+  print("Gists URL: ${obj.gists_url}")
+}
+
+await get_data()
